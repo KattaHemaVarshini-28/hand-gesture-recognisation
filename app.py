@@ -1,12 +1,11 @@
-from flask import Flask, render_template
 import cv2
 import numpy as np
 from tensorflow.keras.models import load_model
 
-app = Flask(__name__)
-
+# Load trained model
 model = load_model("models/hand_gesture_model.h5")
 
+# Gesture labels
 gestures = [
     "Palm",
     "L",
@@ -20,39 +19,48 @@ gestures = [
     "Down"
 ]
 
-@app.route('/')
-def home():
-    cap = cv2.VideoCapture(0)
+# Open webcam
+cap = cv2.VideoCapture(0)
 
-    while True:
-        ret, frame = cap.read()
+while True:
 
-        img = cv2.resize(frame, (64,64))
-        img = np.expand_dims(img, axis=0)
-        img = img / 255.0
+    ret, frame = cap.read()
 
-        prediction = model.predict(img)
-        gesture = gestures[np.argmax(prediction)]
+    if not ret:
+        print("Camera not opening")
+        break
 
-        cv2.putText(
-            frame,
-            gesture,
-            (50,50),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            1,
-            (0,255,0),
-            2
-        )
+    # Resize image
+    img = cv2.resize(frame, (64, 64))
 
-        cv2.imshow("Hand Gesture Recognition", frame)
+    # Normalize
+    img = img / 255.0
 
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+    # Expand dimensions
+    img = np.expand_dims(img, axis=0)
 
-    cap.release()
-    cv2.destroyAllWindows()
+    # Predict
+    prediction = model.predict(img, verbose=0)
 
-    return "Closed"
+    gesture = gestures[np.argmax(prediction)]
 
-if __name__ == "__main__":
-    app.run(debug=True)
+    # Display prediction
+    cv2.putText(
+        frame,
+        "Gesture: " + gesture,
+        (20, 50),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        1,
+        (0, 255, 0),
+        2
+    )
+
+    # Show webcam
+    cv2.imshow("Hand Gesture Recognition", frame)
+
+    # Quit
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+cap.release()
+cv2.destroyAllWindows()
