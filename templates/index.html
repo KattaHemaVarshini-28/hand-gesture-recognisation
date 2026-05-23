@@ -1,11 +1,46 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <title>Hand Gesture Recognition</title>
-</head>
-<body>
 
-<h1>Hand Gesture Recognition System</h1>
+<head>
+
+    <title>Gesture Recognition</title>
+
+</head>
+
+<body style="font-family:Arial;text-align:center;margin-top:50px;">
+
+    <h1>Gesture Recognition</h1>
+
+    <form method="POST" enctype="multipart/form-data">
+
+        <input type="file" name="image" required>
+
+        <br><br>
+
+        <button type="submit">
+            Predict
+        </button>
+
+    </form>
+
+    {% if image %}
+
+        <br>
+
+        <img src="{{ image }}"
+             width="300">
+
+    {% endif %}
+
+    {% if prediction %}
+
+        <h2>
+            Prediction:
+            {{ prediction }}
+        </h2>
+
+    {% endif %}
 
 </body>
+
 </html>

@@ -1,12 +1,14 @@
+from flask import Flask, render_template, request
 import cv2
 import numpy as np
 from tensorflow.keras.models import load_model
+import os
 
-# Load trained model
-model = load_model("models/hand_gesture_model.h5")
+app = Flask(__name__)
 
-# Gesture labels
-gestures = [
+model = load_model("models/gesture_model.h5")
+
+classes = [
     "Palm",
     "L",
     "Fist",
@@ -19,48 +21,43 @@ gestures = [
     "Down"
 ]
 
-# Open webcam
-cap = cv2.VideoCapture(0)
+@app.route("/", methods=["GET", "POST"])
+def home():
 
-while True:
+    prediction = ""
+    image = ""
 
-    ret, frame = cap.read()
+    if request.method == "POST":
 
-    if not ret:
-        print("Camera not opening")
-        break
+        file = request.files["image"]
 
-    # Resize image
-    img = cv2.resize(frame, (64, 64))
+        if file:
 
-    # Normalize
-    img = img / 255.0
+            os.makedirs("static", exist_ok=True)
 
-    # Expand dimensions
-    img = np.expand_dims(img, axis=0)
+            image = "static/" + file.filename
 
-    # Predict
-    prediction = model.predict(img, verbose=0)
+            file.save(image)
 
-    gesture = gestures[np.argmax(prediction)]
+            img = cv2.imread(image)
 
-    # Display prediction
-    cv2.putText(
-        frame,
-        "Gesture: " + gesture,
-        (20, 50),
-        cv2.FONT_HERSHEY_SIMPLEX,
-        1,
-        (0, 255, 0),
-        2
+            img = cv2.resize(img, (64,64))
+
+            img = img / 255.0
+
+            img = np.expand_dims(img, axis=0)
+
+            pred = model.predict(img, verbose=0)
+
+            index = np.argmax(pred)
+
+            prediction = classes[index]
+
+    return render_template(
+        "index.html",
+        prediction=prediction,
+        image=image
     )
 
-    # Show webcam
-    cv2.imshow("Hand Gesture Recognition", frame)
-
-    # Quit
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-
-cap.release()
-cv2.destroyAllWindows()
+if __name__ == "__main__":
+    app.run()

@@ -1,6 +1,5 @@
 tensorflow
 opencv-python
 numpy
-flask
-matplotlib
-scikit-learn
+pillow
+h5py
